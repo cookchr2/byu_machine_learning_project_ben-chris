@@ -1,0 +1,395 @@
+next steps:
+
+clean our list of pids--NO deleted persons, update who has what census
+
+See if I can organize the model better
+
+Predict bins for unmatched data
+
+Obtain 2x2 square -- %accurate for true matches, % accurate for false matches
+
+So we want a table that looks somthing like this
+
+
+Iteration  Accuracy Measure 1  Accuracy Measure 2 Accuracy Measure 3 Sample Size Features Runtime
+1	   98.6%	etc, etc
+
+				Stuff
+
+
+
+###########################################################################################
+
+Table that looks like this: What kind of features make a person a false positive/ true negative?
+
+
+Model3 #single bin
+Runtime: 1389 Seconds
+			True	False
+Predicted True		11203	1838
+Predicted False		119	173672
+
+			True	False
+Predicted True		0.990	0.021
+Predicted False		0.010	0.979
+
+Model4 #Binned with 5 bins
+Runtime: 19.64 Minutes
+			True	False
+Predicted True		15639	761
+Predicted False		823	10269
+
+			True	False
+Predicted True		0.950	0.069
+Predicted False		0.050	0.931
+
+Model5 #Binned with 5 bins
+Runtime: 13.75 Minutes
+			True	False
+Predicted True		15639	1085
+Predicted False		823	15355
+
+			True	False
+Predicted True		0.950	0.066
+Predicted False		0.050	0.934
+
+
+Model6: #1910 to 1920 Predictions*
+Runtime: 20.9 Minutes
+			True	False
+Predicted True		0.9884	0.0116
+Predicted False		0.0106	0.9894
+
+			True	False
+Predicted True		11620	136
+Predicted False		1888	176215
+
+Model8: #1900 to 1920 Predictions
+Runtime: 9.05 Minutes
+			True	False*
+Predicted True		0.9933	0.0067
+Predicted False		0.0065	0.9935
+
+			True	False
+Predicted True		6077	40
+Predicted False		370	56867
+
+
+Model7: #1910 to 1920 Predictions, looser bins. Note that this model suffered from overfitting
+Runtime: 10.13 Minutes
+			True	False*
+Predicted True		0.995	0.005
+Predicted False		0.049	0.951
+
+			True	False
+Predicted True		12249	61
+Predicted False		695	13218
+
+Model9: #1900 to 1910 same bins, entire censuses
+Runtime: 470 Minutes (7.833 Hours)
+
+			True	False
+Predicted True		0.9835	0.0165
+Predicted False		0.0211	0.9789
+
+			True	False
+Predicted True		593041	9973
+Predicted False		30733	1425841
+
+*Sorry, transpose these tables.
+
+Model3: #Using this model to predict all matches.
+
+			True	False
+Predicted True		0.689	0.004
+Predicted False		0.312	0.996
+
+Model3: Note
+This model was used to predict family members. Unfortunately, it preformed poorly, as it gave many 
+good matches a zero, making the poor matches and the good matches indistinguishable.
+Model9: Note
+This model was then used to predict family members with much better results. 
+
+Model12: 1900 to 1910 restricting our sample to Virginia
+
+			True	False
+Predicted True		0.9925	0.0212
+Predicted False		0.0075	0.9788
+N true = 26165
+N false = 128083
+
+Runtime: 40 minutes
+
+Note: A manual check of the predicted matches revealed a match rate of 7/10 with a random sample of 
+10. Though that's certainly decent, I'll need to look into it.
+
+Running 2/7/2018: 
+	Machine14 computer 22 Virginia again
+	Machine11 computer 6 Testing binary's again
+	Machine13 computer 13 lg1020
+
+
+Model13: lg1020 using same loose bins
+Runtime: 513 Minutes
+			True 	False
+Predicted True		0.985	0.0315
+Predicted False		0.015	0.9685
+N True: 693,231
+N False: 3,080,044
+
+Model14: Virginia 1900 to 1910 Tight bins small
+Runtime: 40 Mins
+			True 	False
+Predicted True		0.991	0.0181
+Predicted False		0.009	0.9819
+
+Model11: Testing Binarys on Alabama Pilot.
+Runtime: ?
+Accuracy: 0.9398
+I think I made a mistake specifying this model, because it is terrible. lg1020 uses binarys as well, but
+it acheived rates similiar to lg0010.
+
+Manual Evaluation of potential Matches made by model9 in Alabama:
+00.51111011 -- 6.5/10
+New York (11) https://familysearch.org/ark:/61903/1:1:MSJW-8W4 https://familysearch.org/ark:/61903/1:1:M54Q-TW4
+101100?111 6.5?/10
+Ohio -- Using only predicted scores over 0.9 (instead of 0.5) Loss of 17% of observations
+1111011100 7/10
+If you can't tell, these rates are terrible, and much worse than what we predicted for Alabama.
+
+What are we missing? 
+--People changing household roles (eg they get married) Adding features for marriage and age should fix this
+--Common names Trap. Even when the algorithym knows how common the names are, it still gives common names too much leeway. 
+Fix? I don't know... I will split freq term might help
+
+Model16 -- lg0010 With extra features like age, and lots of nodes (400 1st level) Balanced
+Runtime: 1155 Minutes
+			True 	False
+Predicted True		0.9787	0.0240
+Predicted False		0.0213	0.9760
+N True: 628075
+N False: 1521549
+
+Variance is bad (Training acc is 0.9875) but I can't help but feel like this is still biased....
+Overall, this model performed WORSE than our first try. This is probably due to overfitting (or non-standardized binary variables.)
+
+It looks like our BEST models up to this point are Alabama sm 0010 and Virginia sm 0010. How well do they do when we swap validation sets?
+Using Alabama to predict Virginia yeilds
+			True 	False
+Predicted True		0.6626	0.0281
+Predicted False		0.3374	0.9739
+
+Using Virginia to predict Alabama yeilds:
+			True 	False
+Predicted True		0.9870	0.0459
+Predicted False		0.0130	0.9541
+
+Note how much better Virginia is a predicting Alabama than Alabama predicting Virginia (Though I guess the false positive match rate is really low for Alabama -Virginia)
+This is because I used dummy variables in the Virginia model and I just standardized everything in Alabama. Since it was much easier to 
+convert the normalized variables into dummies, I was able to do so easily. However, I didn't think it was a good use of my time to 
+make sure everything standardized exactly the same in Alabama->Virginia. Thus the poor results. 
+
+Note: I was looking into the possiblility of using a convolutional neural net to improve our results. It still might be worth taking a look, but from what I can tell, 
+it is probably unneccessary for our data. This is because we only have 42 features instead of 100 or 1000. ** Even more research has revealed that this approach is 
+futile for this data. (Though very useful perhaps for tanner?) Convolutional Networks are designed to take in 2d or 3d data and be able to find relationships between
+close together pixels to find patterns. This wouldn't work for our model becasue our features aren't spatially related.
+
+I think the next step is to scour the data and remove "bad" good matches. These are misleading matches that may lead our model to make incorrect conclusions. That is
+I want to remove people who changed last name, who got married and moved and have a too common of names. I don't want the criteria to be TOO strict, because we might be
+at risk of missing some great matches. Here's some official Criteria:
+
+1. I want to remove matches where a person gets married and changes their last name.
+2. I'm itching to remove matches where the person moves, and changes families, but there isn't a good way to do that & I'm afraid that would destroy our predictive ability.
+
+
+Evaluating the potential matches for Virginia 0010. There WERE some mistakes I think I made and have now fixed. Behold!
+11101?1111 8.5/10 Not Bad!
+
+I realized a mistake--Normalized data uses the sample standard deviation and mean which can differ (though hopefully not by much) in sample versus predictive data.
+Thus, I need to use the test standard deviation and mean to predict matches.
+
+Reevaluating Virginia 0010 with standardized standardization:
+?0011?1?11 6.5/10 
+Undoubtably, a sample size of 10 is too small to do much inference, but barring that I made any grave errors in my calculations, there is no evidence to reject Ho that
+standardized standardizations have no effect.
+
+#Running 2/12 Model 17 Virginia NO MAIDENS (Tight bins, no extra features) Computer 23
+			True 	False
+Predicted True		0.9913	0.0199
+Predicted False		0.0087	0.9801
+Runtime: 42 Minutes
+Training Acc: 0.9968
+Ntrue 24718
+Nfalse 227534
+
+So this model preformed basically exactly the same as Model 12. I'll do a check of the predicted matches to see how we're doing there though.
+(.75)11(0.75)??1100
+6.5/10
+
+Yup that 6.5 is pretty consistent....
+
+#Model18 Virginia 0010 Added a group of Horrible (random) matches to try and acheive results similiar to Alabama 0010 (Model3)
+			True 	False
+Predicted True		0.9923	0.020
+Predicted False		0.0077	0.980
+Runtime 45 Minutes
+
+1(0.75)(0.75)1?111(0.75)1
+
+8.75/10 ! This is a huuuge improvement! None of these matches are terrible, obviously wrong matches. The close ones, are ones that I 
+can't verify, but can plasibly be correct, ESPECIALLY given what we told the computer. 
+
+
+#Model19 All States 0010 with a select group of terrible matches added.
+			True 	False
+Predicted True		0.9756	0.021
+Predicted False		0.0246	0.979
+Note that our false negatives climbed (I would estimate many of those are people who moved around) where our false positives are largely 
+unaffected. This is fairly consistent with our other results.
+
+#I'm going to randomly sample 20 to get an estimate for our prediction rate.
+1111?11101100111?011
+
+15/20 -- 7.5/10
+Note: 3 of the 4 zeros were very good matches on all variables I gave the machine, but for whatever reason were wrong. (Though one of those was a william so I'm less 
+inclined to give it the benefit of the doubt). Still, I felt the matching here was decent.
+
+
+************************************************
+I've figured out the next step!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+We now have a list of 13 million potential matches, 10 million of which we estimate to be true matches. Instead of doing family matching on the entire census (that would
+take FOREVER) we can do 2 stage matching! So, among those matched under this model, we go get more data on them. Since our false set is so much bigger than our training
+set we'll probably still have close to balanced groups. (Besides, it won't hurt to have some crap matches mixed in, as we've learned). 
+
+
+# So I've decided to branch out a bit and use some other machine learning methods (On Virginia 0010). Today I used SVM, linear and decision trees. Here are the results:
+SVM
+			True 	False
+Predicted True		0.980	0.018
+Predicted False		0.020	0.982
+Time: Under 10 minutes
+
+Tree
+			True 	False
+Predicted True		0.984	0.019
+Predicted False		0.016	0.981
+Time: Under 10 Minutes
+
+Linear
+			True 	False
+Predicted True		0.969	0.031
+Predicted False		0.031	0.969
+Time: Short.
+
+Note that this is without any hyperparameter tuning at all. All I did was use a tree of 
+maxdepth 20 and everything else was the sklearn default. Note that the true matches are
+notably worse than the neural net (about 1 percentage points less) but the false match rate
+is the same.
+
+The linear regression estimates provide a good baseline comparison for how much machine learning
+is buying us. In this case it looks like one to two percent.
+
+*Running 2/16 on Computer 23 Gridsearched tests
+
+Gridsearch Test Results (Using Virginia data 0010):
+SVM
+			True 	False
+Predicted True		0.982	0.018
+Predicted False		0.018	0.982
+Time: 124 Minutes
+Best Params: C = 10, Kernel = rbf
+
+Tree
+			True 	False
+Predicted True		0.974	0.019
+Predicted False		0.026	0.981
+Time: 0.28 Minutes
+Best Params: max_depth = 10
+
+Linear
+			True 	False
+Predicted True		0.969	0.031
+Predicted False		0.031	0.969
+Best Params: n/a
+
+Aparently, the gridsearch bought us 0.002 true positive accuracy with SVM and we actually 
+dropped 0.01 true positive accuracy with the tree (though it probably wasn't robust).
+
+Let's see what we can get with a generalized sample.
+
+*still running
+
+Random Forest (Using virginia0010)
+			True 	False
+Predicted True		0.990	0.017
+Predicted False		0.010	0.983
+Time: 328/10 Minutes
+--More hyperparameter tuning yeilds same results, but using 0.1 features still depth 20
+
+Random Forest (Using virginia0010)
+			True 	False
+Predicted True		0.991	0.018
+Predicted False		0.009	0.982
+In Sample: 0.9926
+Time: 24/3 Minutes
+Again, this was more curiosity on the hyperparameter tuning. Best was still 0.1 features
+
+*Added New Features including distance (though it was missing for half of the observations)
+			True 	False
+Predicted True		0.926	0.007
+Predicted False		0.074	0.993
+In Sample: 0.9973
+Time: 1/3 Minutes
+So, yes there's some overfitting occuring here, BUT this is one of the best results we've gotten
+outside of Alabama. 
+
+Random Forest (Using virginia0010, w/TAKE2) RF3
+			True 	False
+Predicted True		0.952	0.005
+Predicted False		0.048	0.995
+In Sample: 0.9977
+Time: 130/3 Minutes
+best params: All features
+
+
+Evaluating Virginia predictions using distance
+1111101111
+9/10!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+So, distance is a great metric that works very well. WORTH OUR TIME
+Also, the one false match was a woman with a fairly uncommon name 
+in both groups but she was married in one and single in the other, 
+meaning that she probably wasn't the same person.
+
+Random Forest (Using virginia0010, w/TAKE2, no parent birth info) RF4
+			True 	False
+Predicted True		0.95	0.005
+Predicted False		0.05	0.995
+In Sample: 0.9980
+Time: 34/1 Minutes
+
+#We can actually get close with deep learning. We can get 98/98 on a test set, or
+we can unbalance our data and get 0.956/0.989. We can go further and get 0.92/0.995.
+Since it's becoming clear that the Tree is actually better, I'll just stop here.
+
+#I'm learning that another hyperparameter that we need to balance is how discriminating
+we want the machine to be. We actually have more false matches than we want. So, using
+max false matches gives us a machine that is too discriminating. However, if we use and 
+even ratio it's not discriminating enough. So, that's something we need to balance.
+
+
+#The Random Forest Finally Finished Running on all of the data. Here are the results:
+			True 	False
+Predicted True		0.967	0.009
+Predicted False		0.033	0.991
+In Sample: 0.9881
+Time: 12266 Minutes (204 hours or 8.5 DAYS) HOLY BANANAS that took forever...
+
+Accuracy of Predictions:
+(ALA)1111110111
+(DEL)1111111110
+(FLO)0111111111
+
+That's 90% Accuracy! So, I'd be fairly confident that the true accuracy of this data is 83-95%
